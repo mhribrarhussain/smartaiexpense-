@@ -22,7 +22,7 @@ body {
     display: flex;
     height: 100vh;
     color: var(--text-color);
-    overflow: hidden;
+    overflow: hidden; /* Desktop only */
 }
 
 /* Sidebar */
