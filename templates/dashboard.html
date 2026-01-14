@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="top-bar">
+    <div>
+        <h1 style="margin:0; font-size: 1.5rem;">Dashboard</h1>
+        <span class="date-display">{{ current_date }}</span>
+    </div>
+</div>
+
+<!-- Flashed Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ 'success' if category == 'success' else 'warning' }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<div class="dashboard-grid">
+    <!-- 1. TOP ROW: Quick Add + Recent Transactions -->
+    
+    <!-- Action: Add Expense (Span 4) -->
+    <div class="card action-card">
+        <h3 style="margin-top:0;">➕ Quick Add</h3>
+        <form action="{{ url_for('add_expense_route') }}" method="POST">
+            <div class="form-group">
+                <label>Description (e.g. Biryani 300)</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="expenseInput" name="raw_input" placeholder="Type here..." required style="flex-grow: 1;">
+                    <button type="button" onclick="startVoice()" style="width: auto; padding: 0.75rem; background: #ef4444; border: none; border-radius: 0.5rem; cursor: pointer;" title="Voice Input">
+                        🎤
+                    </button>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Date (Optional)</label>
+                <input type="date" name="expense_date" id="dateInput">
+                <script>
+                    document.getElementById('dateInput').valueAsDate = new Date();
+                </script>
+            </div>
+            
+            <button type="submit" class="btn-primary">Add Expense</button>
+        </form>
+
+        <script>
+            function startVoice() {
+                const btn = document.querySelector('button[onclick="startVoice()"]');
+                const input = document.getElementById('expenseInput');
+                
+                if (!('webkitSpeechRecognition' in window)) {
+                    alert("Voice input is not supported in this browser. Try Chrome/Edge.");
+                    return;
+                }
+
+                const recognition = new webkitSpeechRecognition();
+                recognition.lang = 'en-US'; // Works well for mixed Urdu/English like "Biryani"
+                recognition.interimResults = false;
+                
+                btn.innerHTML = "👂 Listening...";
+                
+                recognition.onstart = function() {
+                    console.log("Voice started");
+                };
+
+                recognition.onresult = function(event) {
+                    const text = event.results[0][0].transcript;
+                    input.value = text;
+                    btn.innerHTML = "🎤";
+                };
+
+                recognition.onerror = function(event) {
+                    console.error(event.error);
+                    btn.innerHTML = "🎤";
+                    alert("Voice Error: " + event.error);
+                };
+                
+                recognition.onend = function() {
+                    btn.innerHTML = "🎤";
+                };
+
+                recognition.start();
+            }
+        </script>
+
+        <h3 style="margin-top: 1.5rem;">🧾 Scan Receipt</h3>
+        <form action="{{ url_for('upload_receipt') }}" method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <input type="file" name="receipt" accept="image/*" required>
+            </div>
+            <button type="submit" class="btn-primary" style="background-color: #4b5563;">Upload & Scan</button>
+        </form>
+    </div>
+
+    <!-- Recent Transactions (Span 8) -->
+    <div class="card history-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem;">
+            <h3 style="margin:0;">Recent Transactions</h3>
+            <a href="{{ url_for('history') }}" style="font-size: 0.875rem; color: var(--primary-color);">View All</a>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for expense in expenses %}
+                <tr>
+                    <td>{{ expense.date.split(' ')[0] }}</td>
+                    <td><span class="badge">{{ expense.category }}</span></td>
+                    <td>{{ expense.expense_text }}</td>
+                    <td style="font-weight: 600;">PKR {{ expense.amount }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if not expenses %}
+            <p style="text-align:center; color: #9ca3af; padding: 20px;">No transactions yet.</p>
+        {% endif %}
+    </div>
+
+    <!-- 2. SECOND ROW: Stats -->
+    <!-- Stat Card: Monthly Spending -->
+    <div class="card stat-card">
+        <span class="stat-title">Total Spending (Month)</span>
+        <span class="stat-value">PKR {{ total }}</span>
+        <span class="stat-trend">Based on local expenses</span>
+    </div>
+
+    <!-- Stat Card: AI Status -->
+    <div class="card stat-card">
+        <span class="stat-title">Forecast (Next Month)</span>
+        <span class="stat-value" style="color: #6366f1;">PKR {{ forecast }}</span>
+        <span class="stat-trend">Predicted by Regression</span>
+    </div>
+    
+    <!-- AI Suggestion / Alert -->
+    <div class="card stat-card" style="grid-column: span 6;">
+        <span class="stat-title">💡 Insight</span>
+        <div style="margin-top: 10px; font-size: 0.9rem;">
+            {% if anomalies %}
+                <div style="color: #ef4444; font-weight: bold; margin-bottom: 5px;">⚠️ Anomalies Detected:</div>
+                {% for anomaly in anomalies %}
+                    <div>{{ anomaly }}</div>
+                {% endfor %}
+            {% endif %}
+            
+            {% if suggestions %}
+               <div style="margin-top: 5px;">{{ suggestions[0] }}</div>
+            {% else %}
+               No alerts. You are doing great!
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 3. THIRD ROW: Charts -->
+    <div class="card chart-card">
+        <canvas id="barChart"></canvas>
+    </div>
+    <div class="card chart-card">
+        <canvas id="pieChart"></canvas>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    fetch('/api/chart_data')
+    .then(response => response.json())
+    .then(data => {
+        const chartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom' } }
+        };
+
+        new Chart(document.getElementById('barChart'), {
+            type: 'bar',
+            data: {
+                labels: data.dates,
+                datasets: [{
+                    label: 'Daily (PKR)',
+                    data: data.daily_amounts,
+                    backgroundColor: '#3b82f6',
+                    borderRadius: 4
+                }]
+            },
+            options: { ...chartOptions, plugins: { title: { display: true, text: 'Daily Trend' } } }
+        });
+
+        new Chart(document.getElementById('pieChart'), {
+            type: 'doughnut',
+            data: {
+                labels: data.categories,
+                datasets: [{
+                    data: data.category_amounts,
+                    backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899']
+                }]
+            },
+            options: { ...chartOptions, plugins: { title: { display: true, text: 'Category Split' } } }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="top-bar">
+    <div>
+        <h1 style="margin:0; font-size: 1.5rem;">Transaction History</h1>
+    </div>
+</div>
+
+<div class="card">
+    <!-- Category Cards Layout -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 1.5rem;">
+        
+        {% for category, data in categorized_expenses.items() %}
+        <div class="card history-card" style="align-self: start;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px;">
+                <h3 style="margin:0; color: var(--primary-color);">{{ category }}</h3>
+                <span style="font-weight: bold;">Total: PKR {{ data.total }}</span>
+            </div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th>Amount</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for expense in data.entries %}
+                    <tr>
+                        <td style="font-size: 0.85rem; color: #6b7280;">{{ expense.date.split(' ')[0] }}</td>
+                        <td>{{ expense.expense_text }}</td>
+                        <td style="font-weight: 600;">{{ expense.amount }}</td>
+                        <td>
+                            <div style="display: flex; gap: 5px;">
+                                <a href="{{ url_for('edit_expense_page', expense_id=expense.id) }}" title="Edit" style="text-decoration: none;">✏️</a>
+                                <form action="{{ url_for('delete_expense_route', expense_id=expense.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure?');">
+                                    <button type="submit" style="background:none; border:none; cursor:pointer;" title="Delete">🗑️</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+            <p style="color: #6b7280;">No transactions found. Start adding expenses!</p>
+            <a href="{{ url_for('dashboard') }}" class="btn-primary" style="margin-top: 10px;">Go to Dashboard</a>
+        </div>
+        {% endfor %}
+
+    </div>
+</div>
+{% endblock %}

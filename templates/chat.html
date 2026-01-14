@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="top-bar">
+    <div>
+        <h1 style="margin:0; font-size: 1.5rem;">AI Chat Assistant</h1>
+    </div>
+</div>
+
+<div class="card" style="height: 70vh; display: flex; flex-direction: column;">
+    <div id="chat-history" style="flex-grow: 1; overflow-y: auto; padding: 1rem; background: #f9fafb; border-radius: 8px; margin-bottom: 1rem;">
+        <div class="msg ai">
+            <strong>🤖 AI:</strong> Hi {{ username }}! Ask me anything about your expenses. <br>
+            <em>Try: "How much did I spend on Food?"</em>
+        </div>
+    </div>
+    
+    <form id="chat-form" style="display: flex; gap: 10px;">
+        <input type="text" id="user-input" placeholder="Type your question..." required style="flex-grow: 1;">
+        <button class="btn-primary" style="width: auto; padding: 0 1.5rem;">Send</button>
+    </form>
+</div>
+
+<style>
+    .msg { margin-bottom: 1rem; padding: 10px; border-radius: 8px; max-width: 80%; }
+    .msg.user { background: #e0e7ff; align-self: flex-end; margin-left: auto; color: #3730a3; }
+    .msg.ai { background: white; border: 1px solid #e5e7eb; align-self: flex-start; color: #374151; }
+</style>
+
+<script>
+    const form = document.getElementById('chat-form');
+    const input = document.getElementById('user-input');
+    const history = document.getElementById('chat-history');
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const text = input.value;
+        if (!text) return;
+
+        // Add User Message
+        history.innerHTML += `<div class="msg user"><strong>You:</strong> ${text}</div>`;
+        input.value = '';
+        history.scrollTop = history.scrollHeight;
+
+        // Fetch AI Response
+        const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ message: text })
+        });
+        const data = await response.json();
+
+        // Add AI Message
+        history.innerHTML += `<div class="msg ai"><strong>🤖 AI:</strong> ${data.response}</div>`;
+        history.scrollTop = history.scrollHeight;
+    });
+</script>
+{% endblock %}

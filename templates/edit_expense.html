@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="top-bar">
+    <div>
+        <h1 style="margin:0; font-size: 1.5rem;">Edit Expense</h1>
+    </div>
+</div>
+
+<div class="card" style="max-width: 600px; margin: 0 auto;">
+    <form action="{{ url_for('update_expense_route', expense_id=expense['id']) }}" method="POST">
+        <div class="form-group">
+            <label>Description</label>
+            <input type="text" name="text" value="{{ expense['expense_text'] }}" required>
+        </div>
+        
+        <div class="form-group">
+            <label>Amount (PKR)</label>
+            <input type="number" step="0.01" name="amount" value="{{ expense['amount'] }}" required>
+        </div>
+        
+        <div class="form-group">
+            <label>Category</label>
+            <select name="category">
+                <option value="{{ expense['category'] }}" selected>{{ expense['category'] }} (Current)</option>
+                <option>Food & Dining</option>
+                <option>Transportation</option>
+                <option>Housing & Utilities</option>
+                <option>Mobile & Communication</option>
+                <option>Shopping</option>
+                <option>Health & Fitness</option>
+                <option>Education</option>
+                <option>Entertainment</option>
+                <option>Gifts & Donations</option>
+                <option>Financial / Others</option>
+            </select>
+        </div>
+        
+        <div style="display: flex; gap: 10px;">
+            <button class="btn-primary" type="submit">Update Transaction</button>
+            <a href="{{ url_for('history') }}" class="btn-primary" style="background-color: #6b7280; text-decoration: none; display: inline-block; text-align: center;">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

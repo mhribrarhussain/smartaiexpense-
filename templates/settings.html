@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="top-bar">
+    <div>
+        <h1 style="margin:0; font-size: 1.5rem;">Settings</h1>
+    </div>
+</div>
+
+<div class="dashboard-grid">
+    <div class="card" style="grid-column: span 6;">
+        <h3>👤 Profile Settings</h3>
+        <form action="{{ url_for('update_settings') }}" method="POST">
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" value="{{ username }}" disabled>
+            </div>
+            <div class="form-group">
+                <label>Currency</label>
+                <select name="currency">
+                    <option selected>PKR (Pakistani Rupee)</option>
+                    <option>USD ($)</option>
+                </select>
+            </div>
+            <button class="btn-primary" type="submit">Save Changes</button>
+        </form>
+    </div>
+
+    <div class="card" style="grid-column: span 6;">
+        <h3>🔐 Security</h3>
+        <form action="{{ url_for('change_password') }}" method="POST">
+            <div class="form-group" style="position: relative;">
+                <label>New Password</label>
+                <input type="password" id="new_password" name="new_password" required placeholder="Enter new password" style="padding-right: 40px;">
+                <span onclick="togglePassword('new_password')" style="position: absolute; right: 10px; top: 35px; cursor: pointer; font-size: 1.2rem;">👁️</span>
+            </div>
+            <button class="btn-primary" type="submit">Update Password</button>
+        </form>
+    </div>
+
+            <label>Export Report</label>
+            <p style="color: grey; font-size: 0.9rem; margin-top:0;">Download a professional PDF report with full details.</p>
+            <a href="{{ url_for('export_pdf') }}" class="btn-primary">📄 Download Report (PDF)</a>
+        </div>
+</div>
+<hr style="border:0; border-top:1px solid #eee; margin: 1rem 0;">
+<div>
+    <label style="color: #ef4444;">Danger Zone</label>
+    <form action="{{ url_for('reset_account') }}" method="POST" onsubmit="return confirm('Are you sure? This will delete all your expenses.');">
+        <button class="btn-primary" style="background-color: #ef4444;">Reset Account</button>
+    </form>
+</div>
+
+<script>
+function togglePassword(id) {
+    var x = document.getElementById(id);
+    if (x.type === "password") { x.type = "text"; } else { x.type = "password"; }
+}
+</script>
+{% endblock %}
